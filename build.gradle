@@ -1,0 +1,32 @@
+plugins {
+    id 'java'
+}
+
+group = 'ru.axothy'
+version = '1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    testImplementation platform('org.junit:junit-bom:5.9.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+test {
+    maxHeapSize = "64m"
+    useJUnitPlatform()
+    jvmArgs += ["--enable-preview"]
+}
+
+compileJava {
+    options.compilerArgs += ["--enable-preview"]
+
+    // Enforce errors
+    options.compilerArgs += ["-Werror"]
+}
+
+compileTestJava {
+    options.compilerArgs += ["--enable-preview"]
+}
