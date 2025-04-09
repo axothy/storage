@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.opentest4j.AssertionFailedError;
-import ru.axothy.api.Dao;
+import ru.axothy.api.Storage;
 import ru.axothy.api.Entry;
 import ru.axothy.config.Config;
 import ru.axothy.storage.BaseEntry;
@@ -81,7 +81,7 @@ public class BaseTest {
         throw new AssertionFailedError(entry + " not found in iterator with elements count " + count);
     }
 
-    public void assertValueAt(Dao<String, Entry<String>> dao, int index) throws IOException {
+    public void assertValueAt(Storage<String, Entry<String>> dao, int index) throws IOException {
         assertSame(dao.get(keyAt(index)), entryAt(index));
     }
 
