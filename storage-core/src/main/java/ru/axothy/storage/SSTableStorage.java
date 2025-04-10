@@ -114,7 +114,7 @@ public class SSTableStorage {
             result.add(new PeekingIteratorImpl<>(iteratorOf(sstable, from, to), priority));
             priority++;
         }
-        return MergeIterator.merge(result, LSMDao::entryComparator);
+        return MergeIterator.merge(result, LSMStorage::entryComparator);
     }
 
     public static Iterator<Entry<MemorySegment>> iteratorOf(

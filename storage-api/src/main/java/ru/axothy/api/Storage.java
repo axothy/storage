@@ -4,7 +4,7 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.util.Iterator;
 
-public interface Dao<D, E extends Entry<D>> extends Closeable {
+public interface Storage<D, E extends Entry<D>> extends Closeable {
 
     /**
      * Returns entry by key. Note: default implementation is far from optimal.

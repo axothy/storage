@@ -1,6 +1,6 @@
 package ru.axothy.storage;
 
-import ru.axothy.api.Dao;
+import ru.axothy.api.Storage;
 import ru.axothy.api.Entry;
 import ru.axothy.config.Config;
 import ru.axothy.iterators.MergeIterator;
@@ -28,7 +28,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static ru.axothy.storage.SSTableUtils.sizeOf;
 
-public class LSMDao implements Dao<MemorySegment, Entry<MemorySegment>> {
+public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> {
     private static final double BLOOM_FILTER_FPP = 0.03;
     private final SSTableStorage ssTablesStorage;
     private final Config config;
@@ -39,7 +39,7 @@ public class LSMDao implements Dao<MemorySegment, Entry<MemorySegment>> {
     private final ReadWriteLock upsertLock = new ReentrantReadWriteLock();
     private final AtomicLong size = new AtomicLong();
 
-    public LSMDao(Config config) {
+    public LSMStorage(Config config) {
         this.config = config;
         this.arena = Arena.ofShared();
         this.ssTablesStorage = new SSTableStorage(config.basePath());
@@ -127,7 +127,7 @@ public class LSMDao implements Dao<MemorySegment, Entry<MemorySegment>> {
                 new PeekingIteratorImpl<>(SSTableStorage.iteratorsAll(segments, from, to), 2)
         );
 
-        return new PeekingIteratorImpl<>(MergeIterator.merge(iterators, LSMDao::entryComparator));
+        return new PeekingIteratorImpl<>(MergeIterator.merge(iterators, LSMStorage::entryComparator));
     }
 
     private PeekingIterator<Entry<MemorySegment>> iteratorForCompaction(List<MemorySegment> segments) {

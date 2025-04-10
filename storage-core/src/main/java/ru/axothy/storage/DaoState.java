@@ -11,7 +11,7 @@ import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
 public final class DaoState {
-    private static final Comparator<MemorySegment> comparator = LSMDao::comparator;
+    private static final Comparator<MemorySegment> comparator = LSMStorage::comparator;
     private final SortedMap<MemorySegment, Entry<MemorySegment>> readEntries;
     private final SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries;
     private final List<MemorySegment> sstables;
