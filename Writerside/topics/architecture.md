@@ -11,6 +11,16 @@ You can use it as a sandbox to play with Writerside features, and remove it from
 - Поддержка репликации данных
 - Возможность встраиваемости
 
+
+Два режима работы:
+
+Встроенный режим (Embedded Mode)
+ : Приложение использует LSM-хранилище напрямую, без участия репликационных механизмов.
+
+Режим реплицированного хранилища (Distributed Mode):  
+ : Клиентские операции (например, upsert) оборачиваются в команды (операции) RAFT и передаются через группу реплик.  
+ : Решения RAFT (аппликация логов) вызывают обновление локального LSM-хранилища
+
 ![Create new topic options](new_topic_options.png){ width=290 }{border-effect=line}
 
 ## Цели и задачи
@@ -50,8 +60,6 @@ flush, WAL
 > **Запись (entry)** представляет из себя пару ключ-значение.
 
 Язык реализации: Java 21.
-
-<img src="convert_table_to_xml.png" alt="Convert table to XML" width="706" border-effect="line"/>
 
 <seealso>
     <category ref="lsm">
