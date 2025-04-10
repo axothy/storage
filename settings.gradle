@@ -1,2 +1,5 @@
 rootProject.name = 'storage'
+include 'storage-api'
+include 'storage-core'
+include 'storage-config'
 
