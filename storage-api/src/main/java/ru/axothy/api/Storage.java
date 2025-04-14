@@ -34,9 +34,9 @@ public interface Storage<D, E extends Entry<D>> extends Closeable {
     }
 
     /**
-     * Returns ordered iterator of all entries with keys < to.
+     * Returns ordered iterator of all entries with keys less than to.
      * @param to upper bound of range (exclusive)
-     * @return entries with key < to
+     * @return entries with key less than to
      */
     default Iterator<E> allTo(D to) {
         return get(null, to);
