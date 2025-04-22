@@ -31,7 +31,7 @@ import static ru.axothy.storage.SSTableUtils.deleteOldSSTables;
 import static ru.axothy.storage.SSTableUtils.entryByteSize;
 import static ru.axothy.storage.SSTableUtils.restoreCompaction;
 
-public class SSTableStorage {
+public class SSTableManager {
     private static final long TOMBSTONE_TAG = -1;
     private static final String SSTABLE_NAME = "sstable_";
     private static final String SSTABLE_EXTENSION = ".dat";
@@ -43,7 +43,7 @@ public class SSTableStorage {
             new SSTableOffsets(Long.BYTES, 0, 2L * Long.BYTES);
     private static int sstablesCount = 0;
 
-    public SSTableStorage(Path basePath) {
+    public SSTableManager(Path basePath) {
         this.basePath = basePath;
     }
 

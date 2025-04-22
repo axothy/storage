@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "ru.axothy"
-version = "1.0"
+version = "1.1"
 
 repositories {
     mavenCentral()
@@ -34,7 +34,7 @@ publishing {
 
             pom {
                 name.set("LSM Storage API")
-                description.set("DAO API")
+                description.set("Storage API")
                 url.set("https://github.com/axothy/storage")
                 issueManagement {
                     url.set("https://github.com/axothy/storage/issues")

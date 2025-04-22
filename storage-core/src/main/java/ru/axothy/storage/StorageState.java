@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-public final class DaoState {
+public final class StorageState {
     private static final Comparator<MemorySegment> comparator = LSMStorage::comparator;
     private final SortedMap<MemorySegment, Entry<MemorySegment>> readEntries;
     private final SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries;
     private final List<MemorySegment> sstables;
 
-    private DaoState(
+    private StorageState(
             SortedMap<MemorySegment, Entry<MemorySegment>> readEntries,
             SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries,
             List<MemorySegment> segments
@@ -30,27 +30,27 @@ public final class DaoState {
         return new ConcurrentSkipListMap<>(comparator);
     }
 
-    public static DaoState initial(List<MemorySegment> segments) {
-        return new DaoState(createMap(), createMap(), segments);
+    public static StorageState initial(List<MemorySegment> segments) {
+        return new StorageState(createMap(), createMap(), segments);
     }
 
-    public DaoState compact(MemorySegment compacted) {
-        return new DaoState(
+    public StorageState compact(MemorySegment compacted) {
+        return new StorageState(
                 readEntries,
                 writeEntries,
                 compacted == null ? Collections.emptyList() : Collections.singletonList(compacted));
     }
 
-    public DaoState beforeFlush() {
-        return new DaoState(writeEntries, createMap(), sstables);
+    public StorageState beforeFlush() {
+        return new StorageState(writeEntries, createMap(), sstables);
     }
 
-    public DaoState afterFlush(MemorySegment newPage) {
+    public StorageState afterFlush(MemorySegment newPage) {
         List<MemorySegment> segments = new ArrayList<>(this.sstables.size() + 1);
         segments.addAll(this.sstables);
         segments.add(newPage);
 
-        return new DaoState(createMap(), writeEntries, segments);
+        return new StorageState(createMap(), writeEntries, segments);
     }
 
     public SortedMap<MemorySegment, Entry<MemorySegment>> getReadEntries() {
