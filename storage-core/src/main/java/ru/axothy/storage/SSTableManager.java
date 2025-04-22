@@ -32,6 +32,7 @@ import static ru.axothy.storage.SSTableUtils.entryByteSize;
 import static ru.axothy.storage.SSTableUtils.restoreCompaction;
 
 public class SSTableManager {
+
     private static final long TOMBSTONE_TAG = -1;
 
     private static final String SSTABLE_NAME = "sstable_";

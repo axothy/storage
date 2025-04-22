@@ -29,14 +29,23 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import static ru.axothy.storage.SSTableUtils.sizeOf;
 
 public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> {
+
     private static final double BLOOM_FILTER_FPP = 0.03;
+
     private final SSTableManager ssTablesStorage;
+
     private final Config config;
+
     private final Arena arena;
+
     private final AtomicReference<StorageState> state;
+
     private final ExecutorService bgExecutor = Executors.newSingleThreadExecutor();
+
     private final AtomicBoolean closed = new AtomicBoolean();
+
     private final ReadWriteLock upsertLock = new ReentrantReadWriteLock();
+
     private final AtomicLong size = new AtomicLong();
 
     public LSMStorage(Config config) {
