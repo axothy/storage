@@ -1,3 +1,5 @@
+package utils;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.opentest4j.AssertionFailedError;
@@ -32,7 +34,7 @@ public class BaseTest {
     private final CopyOnWriteArrayList<ExecutorService> executors = new CopyOnWriteArrayList<>();
 
     public static Storage<String, Entry<String>> getStringEntryStorage() throws IOException {
-        Path tmp = Files.createTempDirectory("dao");
+        Path tmp = Files.createTempDirectory("storage");
         long flushThreshold = 1 << 20; // 1 MB
 
         return new MemorySegmentStorageFactory().createStringStorage(new Config(tmp, flushThreshold, 0.2));
@@ -89,8 +91,8 @@ public class BaseTest {
         throw new AssertionFailedError(entry + " not found in iterator with elements count " + count);
     }
 
-    public void assertValueAt(Storage<String, Entry<String>> dao, int index) throws IOException {
-        assertSame(dao.get(keyAt(index)), entryAt(index));
+    public void assertValueAt(Storage<String, Entry<String>> storage, int index) throws IOException {
+        assertSame(storage.get(keyAt(index)), entryAt(index));
     }
 
     public static void sleep(final int millis) {
@@ -223,8 +225,8 @@ public class BaseTest {
         }
     }
 
-    public void cleanUpPersistentData(Storage<String, Entry<String>> dao) throws IOException {
-        Config config = StorageFactory.extractConfig(dao);
+    public void cleanUpPersistentData(Storage<String, Entry<String>> storage) throws IOException {
+        Config config = StorageFactory.extractConfig(storage);
         cleanUpDir(config);
     }
 
@@ -247,8 +249,8 @@ public class BaseTest {
         });
     }
 
-    public long sizePersistentData(Storage<String, Entry<String>> dao) throws IOException {
-        Config config = StorageFactory.extractConfig(dao);
+    public long sizePersistentData(Storage<String, Entry<String>> storage) throws IOException {
+        Config config = StorageFactory.extractConfig(storage);
         return sizePersistentData(config);
     }
 

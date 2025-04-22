@@ -1,13 +1,13 @@
+package basic;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.opentest4j.AssertionFailedError;
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
-import ru.axothy.config.Config;
+import utils.BaseTest;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,14 +16,14 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testEmpty() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         assertEmpty(storage.all());
     }
 
     @Test
     void testSingle() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("a", "b"));
         assertSame(
@@ -35,7 +35,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testOrder() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("b", "b"));
         storage.upsert(entry("aa", "aa"));
@@ -52,7 +52,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testOrder2() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("aa", "aa"));
         storage.upsert(entry("b", "b"));
@@ -69,7 +69,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testTree() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("e", "f"));
         storage.upsert(entry("c", "d"));
@@ -86,7 +86,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testManyIterators() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         List<Entry<String>> entries = new ArrayList<>(entries(10_000));
         for (Entry<String> entry : entries) {
@@ -107,7 +107,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testFindValueInTheMiddle() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("e", "f"));
         storage.upsert(entry("c", "d"));
@@ -118,7 +118,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testFindRangeInTheMiddle() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("e", "f"));
         storage.upsert(entry("c", "d"));
@@ -129,7 +129,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testFindFullRange() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("e", "f"));
         storage.upsert(entry("c", "d"));
@@ -147,7 +147,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testAllTo() throws IOException {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         storage.upsert(entry("e", "f"));
         storage.upsert(entry("c", "d"));
@@ -163,7 +163,7 @@ public class BasicTest extends BaseTest {
 
     @Test
     void testHugeData() throws Exception {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
 
         final int entries = 100_000;
 
@@ -171,7 +171,7 @@ public class BasicTest extends BaseTest {
             final int e = entry;
 
             // Retry if autoflush is too slow
-            retry(() -> storage.upsert(entry(keyAt(e), valueAt(e))));
+            BaseTest.retry(() -> storage.upsert(entry(keyAt(e), valueAt(e))));
         }
 
         for (int entry = 0; entry < entries; entry++) {

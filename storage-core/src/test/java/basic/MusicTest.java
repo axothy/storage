@@ -1,7 +1,11 @@
+package basic;
+
 import org.junit.jupiter.api.Test;
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.storage.BaseEntry;
+import utils.BaseTest;
+import utils.StorageFactory;
 
 import java.util.Iterator;
 
@@ -13,7 +17,7 @@ public class MusicTest extends BaseTest {
 
     @Test
     void database() throws Exception {
-        Storage<String, Entry<String>> storage = getStringEntryStorage();
+        Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
         
         // Fill the music database
         storage.upsert(record(trackFrom("Ar1", "Al11", "T111"), 15));

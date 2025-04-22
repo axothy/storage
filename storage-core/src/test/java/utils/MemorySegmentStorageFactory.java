@@ -1,3 +1,5 @@
+package utils;
+
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;

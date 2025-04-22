@@ -30,10 +30,10 @@ import static ru.axothy.storage.SSTableUtils.sizeOf;
 
 public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> {
     private static final double BLOOM_FILTER_FPP = 0.03;
-    private final SSTableStorage ssTablesStorage;
+    private final SSTableManager ssTablesStorage;
     private final Config config;
     private final Arena arena;
-    private final AtomicReference<DaoState> state;
+    private final AtomicReference<StorageState> state;
     private final ExecutorService bgExecutor = Executors.newSingleThreadExecutor();
     private final AtomicBoolean closed = new AtomicBoolean();
     private final ReadWriteLock upsertLock = new ReentrantReadWriteLock();
@@ -42,8 +42,8 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
     public LSMStorage(Config config) {
         this.config = config;
         this.arena = Arena.ofShared();
-        this.ssTablesStorage = new SSTableStorage(config.basePath());
-        this.state = new AtomicReference<>(DaoState.initial(SSTableStorage.loadOrRecover(config.basePath(), arena)));
+        this.ssTablesStorage = new SSTableManager(config.basePath());
+        this.state = new AtomicReference<>(StorageState.initial(SSTableManager.loadOrRecover(config.basePath(), arena)));
     }
 
     public static int comparator(MemorySegment segment1, MemorySegment segment2) {
@@ -71,7 +71,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
 
     @Override
     public Iterator<Entry<MemorySegment>> get(MemorySegment from, MemorySegment to) {
-        DaoState currState = this.state.get();
+        StorageState currState = this.state.get();
 
         PeekingIterator<Entry<MemorySegment>> rangeIterator = range(
                 memoryIterator(currState.getReadEntries(), from, to),
@@ -83,7 +83,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
 
     @Override
     public Entry<MemorySegment> get(MemorySegment key) {
-        DaoState currState = this.state.get();
+        StorageState currState = this.state.get();
 
         Entry<MemorySegment> result = currState.getWriteEntries().get(key);
         if (result != null) {
@@ -97,7 +97,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
         return getFromDisk(key, currState);
     }
 
-    private static Entry<MemorySegment> getFromDisk(MemorySegment key, DaoState state) {
+    private static Entry<MemorySegment> getFromDisk(MemorySegment key, StorageState state) {
         Entry<MemorySegment> result;
 
         for (MemorySegment sstable : state.getSstables()) {
@@ -124,14 +124,14 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
         List<PeekingIterator<Entry<MemorySegment>>> iterators = List.of(
                 new PeekingIteratorImpl<>(firstIterator, 1),
                 new PeekingIteratorImpl<>(secondIterator, 0),
-                new PeekingIteratorImpl<>(SSTableStorage.iteratorsAll(segments, from, to), 2)
+                new PeekingIteratorImpl<>(SSTableManager.iteratorsAll(segments, from, to), 2)
         );
 
         return new PeekingIteratorImpl<>(MergeIterator.merge(iterators, LSMStorage::entryComparator));
     }
 
     private PeekingIterator<Entry<MemorySegment>> iteratorForCompaction(List<MemorySegment> segments) {
-        return new PeekingIteratorImpl<>(SSTableStorage.iteratorsAll(segments, null, null));
+        return new PeekingIteratorImpl<>(SSTableManager.iteratorsAll(segments, null, null));
     }
 
     private static Iterator<Entry<MemorySegment>> memoryIterator(
@@ -175,7 +175,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
     public void compact() {
         bgExecutor.execute(() -> {
             try {
-                DaoState currState = this.state.get();
+                StorageState currState = this.state.get();
                 MemorySegment newPage = compact(currState.getSstables());
                 this.state.set(currState.compact(newPage));
             } catch (IOException e) {
@@ -218,13 +218,13 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
     @Override
     public void flush() {
         bgExecutor.execute(() -> {
-            DaoState prevState = state.get();
+            StorageState prevState = state.get();
             SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries = prevState.getWriteEntries();
             if (writeEntries.isEmpty()) {
                 return;
             }
 
-            DaoState nextState = prevState.beforeFlush();
+            StorageState nextState = prevState.beforeFlush();
             upsertLock.writeLock().lock();
             try {
                 state.set(nextState);

@@ -1,3 +1,5 @@
+package utils;
+
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;
@@ -7,7 +9,7 @@ import java.io.IOException;
 public interface StorageFactory<D, E extends Entry<D>> {
 
     default Storage<D, E> createStorage() throws IOException {
-        throw new UnsupportedOperationException("Need to override one of createDao methods");
+        throw new UnsupportedOperationException("Need to override one of createStorage methods");
     }
 
     default Storage<D, E> createStorage(Config config) throws IOException {
@@ -20,12 +22,12 @@ public interface StorageFactory<D, E extends Entry<D>> {
 
     E fromBaseEntry(Entry<D> baseEntry);
 
-    static Config extractConfig(Storage<String, Entry<String>> dao) {
-        return ((StringStorage<?,?>)dao).getConfig();
+    static Config extractConfig(Storage<String, Entry<String>> storage) {
+        return ((StringStorage<?,?>)storage).getConfig();
     }
 
-    static Storage<String, Entry<String>> reopen(Storage<String, Entry<String>> dao) throws IOException {
-        return ((StringStorage<?,?>)dao).reopen();
+    static Storage<String, Entry<String>> reopen(Storage<String, Entry<String>> storage) throws IOException {
+        return ((StringStorage<?,?>)storage).reopen();
     }
 
     default Storage<String, Entry<String>> createStringStorage(Config config) throws IOException {

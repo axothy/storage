@@ -79,7 +79,7 @@ public interface Storage<D, E extends Entry<D>> extends Closeable {
     }
 
     /**
-     * Releases Dao (calls flush by default).
+     * Releases Storage (calls flush by default).
      */
     @Override
     default void close() throws IOException {
