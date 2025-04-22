@@ -26,7 +26,7 @@ public final class SSTableUtils {
 
     }
 
-    public static FindResult binarySearch(MemorySegment readSegment, MemorySegment key) {
+    public static SSTableManager.BinarySearchResult binarySearch(MemorySegment readSegment, MemorySegment key) {
         long low = -1;
         long high = readSegment.get(ValueLayout.JAVA_LONG_UNALIGNED, ENTRIES_SIZE_OFFSET);
 
@@ -44,7 +44,7 @@ public final class SSTableUtils {
                     key, 0, key.byteSize());
 
             if (mismatch == -1) {
-                return new FindResult(true, mid);
+                return new SSTableManager.BinarySearchResult(true, mid);
             }
 
             if (mismatch == keySize) {
@@ -68,14 +68,14 @@ public final class SSTableUtils {
             }
         }
 
-        return new FindResult(false, -(low + 1));
+        return new SSTableManager.BinarySearchResult(false, -(low + 1));
     }
 
     public static Entry<MemorySegment> get(MemorySegment readSegment, MemorySegment key) {
         final long bloomFilterLength = readSegment.get(ValueLayout.JAVA_LONG_UNALIGNED, BLOOM_FILTER_LENGTH_OFFSET);
         final long keyOffset = 3L * Long.BYTES + Long.BYTES * bloomFilterLength;
 
-        FindResult findResult = binarySearch(readSegment, key);
+        SSTableManager.BinarySearchResult findResult = binarySearch(readSegment, key);
 
         if (findResult.found()) {
             return get(readSegment, findResult.index(), keyOffset);

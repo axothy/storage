@@ -33,15 +33,24 @@ import static ru.axothy.storage.SSTableUtils.restoreCompaction;
 
 public class SSTableManager {
     private static final long TOMBSTONE_TAG = -1;
+
     private static final String SSTABLE_NAME = "sstable_";
+
     private static final String SSTABLE_EXTENSION = ".dat";
+
     private static final long OLDEST_SS_TABLE_INDEX = 0;
+
     private static final long COMPACTION_NOT_FINISHED_TAG = -1;
+
     private final Path basePath;
+
     public static final int HASH_FUNCTIONS_NUM = 2;
-    private static final SSTableOffsets offsetsConfig =
-            new SSTableOffsets(Long.BYTES, 0, 2L * Long.BYTES);
+
+    private static final SSTableOffsets offsetsConfig = new SSTableOffsets(Long.BYTES, 0, 2L * Long.BYTES);
+
     private static int sstablesCount = 0;
+
+    public record BinarySearchResult(boolean found, long index) { }
 
     public SSTableManager(Path basePath) {
         this.basePath = basePath;
@@ -98,7 +107,7 @@ public class SSTableManager {
         return Comparator.comparingInt(Map.Entry::getValue);
     }
 
-    public static FindResult find(MemorySegment readSegment, MemorySegment key) {
+    public static BinarySearchResult find(MemorySegment readSegment, MemorySegment key) {
         return SSTableUtils.binarySearch(readSegment, key);
     }
 
