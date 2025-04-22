@@ -34,7 +34,7 @@ publishing {
 
             pom {
                 name.set("LSM Storage API")
-                description.set("DAO API")
+                description.set("Storage API")
                 url.set("https://github.com/axothy/storage")
                 issueManagement {
                     url.set("https://github.com/axothy/storage/issues")
