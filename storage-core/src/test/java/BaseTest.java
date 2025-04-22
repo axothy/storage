@@ -31,6 +31,13 @@ public class BaseTest {
 
     private final CopyOnWriteArrayList<ExecutorService> executors = new CopyOnWriteArrayList<>();
 
+    public static Storage<String, Entry<String>> getStringEntryStorage() throws IOException {
+        Path tmp = Files.createTempDirectory("dao");
+        long flushThreshold = 1 << 20; // 1 MB
+
+        return new MemorySegmentStorageFactory().createStringStorage(new Config(tmp, flushThreshold, 0.2));
+    }
+
     public void assertEmpty(Iterator<?> iterator) {
         checkInterrupted();
         Assertions.assertIterableEquals(Collections.emptyList(), list(iterator));
