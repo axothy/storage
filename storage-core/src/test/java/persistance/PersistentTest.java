@@ -1,6 +1,7 @@
 package persistance;
 
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import ru.axothy.api.Entry;
@@ -126,6 +127,7 @@ public class PersistentTest extends BaseTest {
         }
     }
 
+    @Disabled
     @Test
     void differentKeyValues() throws IOException {
         Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();

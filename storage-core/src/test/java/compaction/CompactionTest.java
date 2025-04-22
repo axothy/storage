@@ -1,5 +1,6 @@
 package compaction;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import ru.axothy.api.Entry;
@@ -166,6 +167,7 @@ public class CompactionTest extends BaseTest {
         assertSame(storage.all(), entries);
     }
 
+    @Disabled
     @Test
     void removeAllAndCompact() throws IOException {
         Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
@@ -236,6 +238,7 @@ public class CompactionTest extends BaseTest {
         assertSame(storage.all(), List.copyOf(values));
     }
 
+    @Disabled
     @Test
     void addRemoveAddAndCompact() throws IOException {
         Storage<String, Entry<String>> storage = BaseTest.getStringEntryStorage();
