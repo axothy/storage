@@ -125,13 +125,8 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
         return null;
     }
 
-    private PeekingIterator<Entry<MemorySegment>> range(
-            Iterator<Entry<MemorySegment>> firstIterator,
-            Iterator<Entry<MemorySegment>> secondIterator,
-            List<MemorySegment> segments,
-            MemorySegment from,
-            MemorySegment to
-    ) {
+    private PeekingIterator<Entry<MemorySegment>> range(Iterator<Entry<MemorySegment>> firstIterator, Iterator<Entry<MemorySegment>> secondIterator,
+                                                        List<MemorySegment> segments, MemorySegment from, MemorySegment to) {
         final List<PeekingIterator<Entry<MemorySegment>>> iterators = List.of(
                 new PeekingIteratorImpl<>(firstIterator, 1),
                 new PeekingIteratorImpl<>(secondIterator, 0),
@@ -145,10 +140,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
         return new PeekingIteratorImpl<>(SSTableManager.iteratorsAll(segments, null, null));
     }
 
-    private static Iterator<Entry<MemorySegment>> memoryIterator(
-            SortedMap<MemorySegment, Entry<MemorySegment>> entries,
-            MemorySegment from,
-            MemorySegment to
+    private static Iterator<Entry<MemorySegment>> memoryIterator(SortedMap<MemorySegment, Entry<MemorySegment>> entries, MemorySegment from, MemorySegment to
     ) {
         if (from == null && to == null) {
             return entries.values().iterator();

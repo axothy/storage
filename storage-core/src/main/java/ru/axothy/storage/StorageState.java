@@ -16,11 +16,7 @@ public final class StorageState {
     private final SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries;
     private final List<MemorySegment> sstables;
 
-    private StorageState(
-            SortedMap<MemorySegment, Entry<MemorySegment>> readEntries,
-            SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries,
-            List<MemorySegment> segments
-    ) {
+    private StorageState(SortedMap<MemorySegment, Entry<MemorySegment>> readEntries, SortedMap<MemorySegment, Entry<MemorySegment>> writeEntries, List<MemorySegment> segments) {
         this.readEntries = readEntries;
         this.writeEntries = writeEntries;
         this.sstables = segments;
