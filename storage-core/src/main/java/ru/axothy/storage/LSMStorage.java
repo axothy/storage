@@ -86,7 +86,9 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
                 memoryIterator(currState.getReadEntries(), from, to),
                 memoryIterator(currState.getWriteEntries(), from, to),
                 currState.getSstables(),
-                from, to);
+                from,
+                to);
+
         return new SkipTombstoneIterator(rangeIterator);
     }
 
@@ -130,7 +132,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
             MemorySegment from,
             MemorySegment to
     ) {
-        List<PeekingIterator<Entry<MemorySegment>>> iterators = List.of(
+        final List<PeekingIterator<Entry<MemorySegment>>> iterators = List.of(
                 new PeekingIteratorImpl<>(firstIterator, 1),
                 new PeekingIteratorImpl<>(secondIterator, 0),
                 new PeekingIteratorImpl<>(SSTableManager.iteratorsAll(segments, from, to), 2)
@@ -162,7 +164,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
     @Override
     public void upsert(Entry<MemorySegment> entry) {
         final boolean autoFlush;
-        MemorySegment key = entry.key();
+        final MemorySegment key = entry.key();
 
         Entry<MemorySegment> old;
         upsertLock.readLock().lock();

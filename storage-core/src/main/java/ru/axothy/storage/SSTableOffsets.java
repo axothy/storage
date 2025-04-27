@@ -2,7 +2,9 @@ package ru.axothy.storage;
 
 public class SSTableOffsets {
     private final long bloomFilterHashFunctionsOffset;
+
     private final long bloomFilterLengthOffset;
+
     private final long entriesSizeOffset;
 
     public SSTableOffsets(long bloomFilterHashFunctionsOffset, long bloomFilterLengthOffset, long entriesSizeOffset) {

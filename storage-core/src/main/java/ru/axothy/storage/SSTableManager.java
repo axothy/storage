@@ -112,11 +112,7 @@ public class SSTableManager {
         return SSTableUtils.binarySearch(readSegment, key);
     }
 
-    public static Iterator<Entry<MemorySegment>> iteratorsAll(
-            List<MemorySegment> segments,
-            MemorySegment from,
-            MemorySegment to
-    ) {
+    public static Iterator<Entry<MemorySegment>> iteratorsAll(List<MemorySegment> segments, MemorySegment from, MemorySegment to) {
         List<PeekingIterator<Entry<MemorySegment>>> result = new ArrayList<>();
 
         int priority = 1;
@@ -127,11 +123,7 @@ public class SSTableManager {
         return MergeIterator.merge(result, LSMStorage::entryComparator);
     }
 
-    public static Iterator<Entry<MemorySegment>> iteratorOf(
-            MemorySegment sstable,
-            MemorySegment from,
-            MemorySegment to
-    ) {
+    public static Iterator<Entry<MemorySegment>> iteratorOf(MemorySegment sstable, MemorySegment from, MemorySegment to) {
         long keyIndexFrom;
         long keyIndexTo;
 
@@ -149,8 +141,7 @@ public class SSTableManager {
             keyIndexTo = find(sstable, to).index();
         }
 
-        final long bloomFilterLength = sstable.get(ValueLayout.JAVA_LONG_UNALIGNED,
-                offsetsConfig.getBloomFilterLengthOffset());
+        final long bloomFilterLength = sstable.get(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterLengthOffset());
         final long keyOffset = 3L * Long.BYTES + bloomFilterLength * Long.BYTES;
 
         if (keyIndexFrom < 0) {
@@ -183,14 +174,11 @@ public class SSTableManager {
         //Writing sstable header
         long headerOffset = 0;
 
-        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED,
-                offsetsConfig.getBloomFilterLengthOffset(), bloomFilterLength);
+        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterLengthOffset(), bloomFilterLength);
         headerOffset += Long.BYTES;
-        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED,
-                offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
+        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
         headerOffset += Long.BYTES;
-        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED,
-                offsetsConfig.getEntriesSizeOffset(), dataToFlush.size());
+        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getEntriesSizeOffset(), dataToFlush.size());
         headerOffset += Long.BYTES;
         //---------
 
@@ -201,8 +189,7 @@ public class SSTableManager {
 
         long i = 0;
         for (Entry<MemorySegment> entry : dataToFlush) {
-            BloomFilter.addToSstable(entry.key(), memorySegment, HASH_FUNCTIONS_NUM,
-                    bloomFilterLength * Long.SIZE);
+            BloomFilter.addToSstable(entry.key(), memorySegment, HASH_FUNCTIONS_NUM, bloomFilterLength * Long.SIZE);
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, keyOffset + i * Long.BYTES, offset);
             offset = writeEntry(entry, memorySegment, offset);
             i++;
@@ -238,18 +225,13 @@ public class SSTableManager {
         return newOffset;
     }
 
-    public MemorySegment compact(Iterator<Entry<MemorySegment>> iterator,
-                                 long sizeForCompaction, long entryCount, long bfLength) throws IOException {
+    public MemorySegment compact(Iterator<Entry<MemorySegment>> iterator, long sizeForCompaction, long entryCount, long bfLength) throws IOException {
         Path path = basePath.resolve(SSTABLE_NAME + ".tmp");
 
         MemorySegment memorySegment;
         try (Arena arenaForCompact = Arena.ofShared()) {
-            try (FileChannel channel = FileChannel.open(path,
-                    StandardOpenOption.READ,
-                    StandardOpenOption.WRITE,
-                    StandardOpenOption.CREATE)) {
-                memorySegment = channel.map(FileChannel.MapMode.READ_WRITE, 0, sizeForCompaction,
-                        arenaForCompact);
+            try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE)) {
+                memorySegment = channel.map(FileChannel.MapMode.READ_WRITE, 0, sizeForCompaction, arenaForCompact);
             }
 
             //Writing sstable header
@@ -257,11 +239,9 @@ public class SSTableManager {
 
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterLengthOffset(), bfLength);
             headerOffset += Long.BYTES;
-            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED,
-                    offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
+            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
             headerOffset += Long.BYTES;
-            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED,
-                    offsetsConfig.getEntriesSizeOffset(), COMPACTION_NOT_FINISHED_TAG);
+            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getEntriesSizeOffset(), COMPACTION_NOT_FINISHED_TAG);
             headerOffset += Long.BYTES;
             //---------
 
@@ -292,8 +272,7 @@ public class SSTableManager {
         Path path = basePath.resolve(SSTABLE_NAME + ".tmp");
 
         deleteOldSSTables(basePath);
-        Files.move(path, path.resolveSibling(SSTABLE_NAME + OLDEST_SS_TABLE_INDEX + SSTABLE_EXTENSION),
-                StandardCopyOption.ATOMIC_MOVE);
+        Files.move(path, path.resolveSibling(SSTABLE_NAME + OLDEST_SS_TABLE_INDEX + SSTABLE_EXTENSION), StandardCopyOption.ATOMIC_MOVE);
 
         sstablesCount = 1;
     }

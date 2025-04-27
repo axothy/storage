@@ -7,8 +7,8 @@ import java.lang.invoke.VarHandle;
 
 public final class MurmurHash {
     public static final int DEFAULT_SEED = 104729;
-    public static final VarHandle LITTLE_ENDIAN_LONG =
-            MethodHandles.memorySegmentViewVarHandle(ValueLayout.JAVA_LONG_UNALIGNED);
+
+    public static final VarHandle LITTLE_ENDIAN_LONG = MethodHandles.memorySegmentViewVarHandle(ValueLayout.JAVA_LONG_UNALIGNED);
 
     private MurmurHash() {
 
@@ -19,7 +19,7 @@ public final class MurmurHash {
     }
 
     public static long[] hash64(MemorySegment key, int offset, int length, long seed) {
-        final int nblocks = length >> 4;
+        final int nBlocks = length >> 4;
 
         long h1 = seed;
         long h2 = seed;
@@ -30,7 +30,7 @@ public final class MurmurHash {
         //----------
         // body
 
-        for (int i = 0; i < nblocks; i++) {
+        for (int i = 0; i < nBlocks; i++) {
             long k1 = getBlock(key, offset, i * 2 + 0);
 
             k1 *= c1;
@@ -58,7 +58,7 @@ public final class MurmurHash {
         // tail
 
         // Advance offset to the unprocessed tail of the data.
-        long advancedOffset = (long) offset + nblocks * 16;
+        long advancedOffset = (long) offset + nBlocks * 16;
 
         long k1 = 0;
         long k2 = 0;
