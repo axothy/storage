@@ -7,6 +7,8 @@ import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;
 import ru.axothy.storage.BaseEntry;
+import ru.axothy.storage.MemorySegmentStorageFactory;
+import ru.axothy.storage.StorageFactory;
 
 import java.io.IOException;
 import java.nio.channels.IllegalBlockingModeException;

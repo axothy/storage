@@ -1,9 +1,8 @@
-package utils;
+package ru.axothy.storage;
 
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;
-import ru.axothy.storage.LSMStorage;
 
 import java.lang.foreign.MemorySegment;
 import java.lang.foreign.ValueLayout;

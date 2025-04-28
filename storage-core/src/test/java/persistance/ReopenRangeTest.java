@@ -5,7 +5,7 @@ import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.storage.BaseEntry;
 import utils.BaseTest;
-import utils.StorageFactory;
+import ru.axothy.storage.StorageFactory;
 
 import java.io.IOException;
 import java.util.AbstractList;

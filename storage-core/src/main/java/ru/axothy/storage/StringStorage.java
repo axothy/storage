@@ -1,9 +1,8 @@
-package utils;
+package ru.axothy.storage;
 
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;
-import ru.axothy.storage.BaseEntry;
 
 import java.io.IOException;
 import java.util.Iterator;
