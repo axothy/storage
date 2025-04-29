@@ -13,6 +13,7 @@ repositories {
 dependencies {
     implementation(project(":storage-api"))
 
+    implementation("org.apache.ratis:ratis-grpc:3.1.3")
     implementation("com.google.protobuf:protobuf-java:3.25.7")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))

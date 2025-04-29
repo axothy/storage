@@ -18,6 +18,7 @@ dependencies {
     implementation("org.apache.ratis:ratis-grpc:3.1.3")
     implementation("org.apache.ratis:ratis-server:3.1.3")
     implementation("org.apache.ratis:ratis-client:3.1.3")
+    implementation("org.apache.ratis:ratis-metrics-default:3.1.3")
 
     implementation("com.google.protobuf:protobuf-java:3.25.7")
     implementation("io.grpc:grpc-netty-shaded:1.72.0")
