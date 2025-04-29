@@ -6,6 +6,7 @@ import lsmraft.Lsmraft;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.statemachine.TransactionContext;
 import org.apache.ratis.statemachine.impl.BaseStateMachine;
+import org.apache.ratis.util.ProtoUtils;
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import ru.axothy.config.Config;
@@ -89,7 +90,7 @@ public final class LsmStateMachine extends BaseStateMachine {
             reply.setSingle(ProtoEntryConverters.toProtoEntry(entry));
         }
 
-        return Message.valueOf(parse(reply.build()));
+        return Message.valueOf(ProtoUtils.toByteString(reply.build().toByteArray()));
     }
 
     private Message rangeGet(Lsmraft.Range range) {
@@ -107,7 +108,7 @@ public final class LsmStateMachine extends BaseStateMachine {
         Lsmraft.QueryReply.Builder reply = Lsmraft.QueryReply.newBuilder();
         reply.setChunk(chunk);
 
-        return Message.valueOf(parse(reply.build()));
+        return Message.valueOf(ProtoUtils.toByteString(reply.build().toByteArray()));
     }
 
     @Override
@@ -121,8 +122,4 @@ public final class LsmStateMachine extends BaseStateMachine {
         return 0;
     }
 
-    private org.apache.ratis.thirdparty.com.google.protobuf.ByteString parse(MessageLite src) {
-        byte[] data = src.toByteArray();
-        return org.apache.ratis.thirdparty.com.google.protobuf.ByteString.copyFrom(data);
-    }
 }
