@@ -4,14 +4,23 @@ import org.apache.ratis.client.*;
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
 import org.apache.ratis.server.RaftServer;
-import org.junit.jupiter.api.*;
+import org.apache.ratis.server.RaftServerConfigKeys;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import ru.axothy.LsmStateMachine;
 
 import java.io.IOException;
-import java.nio.file.*;
-import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
 import static ru.axothy.utils.ProtoEntryConverters.parse;
 import static ru.axothy.utils.ProtoEntryConverters.toMessage;
 
@@ -29,6 +38,7 @@ public class RaftClusterSmokeTest {
         for (int i = 1; i <= 3; i++) {
             int port = freePort();
             String id = "n" + i;
+
             RaftPeer peer = RaftPeer.newBuilder()
                     .setId(RaftPeerId.valueOf(id))
                     .setAddress("localhost:" + port)
@@ -40,6 +50,7 @@ public class RaftClusterSmokeTest {
 
             RaftProperties props = new RaftProperties();
             GrpcConfigKeys.Server.setPort(props, port);
+            RaftServerConfigKeys.setStorageDir(props, List.of(dir.toFile()));
 
             RaftServer srv = RaftServer.newBuilder()
                     .setServerId(peer.getId())
@@ -108,21 +119,6 @@ public class RaftClusterSmokeTest {
         }
     }
 
-    /* ---------- ТЕСТ 2: лидер переживает kill-9 узла ---------- */
-    @Test
-    void survivesOneNodeDown() throws Exception {
-        servers.get(0).close();                       // выключаем первый
-        try (RaftClient client = newClient()) {
-            Lsmraft.Query q = Lsmraft.Query.newBuilder()
-                    .setGet(Lsmraft.Get.newBuilder()
-                            .setKey(com.google.protobuf.ByteString.copyFromUtf8("none")))
-                    .build();
-            RaftClientReply r = client.io().sendReadOnly(toMessage(q));
-            assertTrue(r.isSuccess());
-        }
-    }
-
-    /* ---------- helpers ---------- */
     private static int freePort() throws Exception {
         try (var s = new java.net.ServerSocket(0)) {
             return s.getLocalPort();

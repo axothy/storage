@@ -1,7 +1,6 @@
 package ru.axothy;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.MessageLite;
 import lsmraft.Lsmraft;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.statemachine.TransactionContext;
