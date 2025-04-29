@@ -13,8 +13,9 @@ ENV PEER_ID=n1 \
     PEERS=n1:localhost:8761 \
     DATA_DIR=/data
 
-COPY --from=build /src/replicated-storage-core/build/libs/*-all.jar /app/lsmraft.jar
+COPY --from=build /src/replicated-storage-core/build/libs/lsmraft.jar /app/
+
 VOLUME /data
 EXPOSE 8761
-ENTRYPOINT ["sh","-c","exec java -jar /app/lsmraft.jar \
+ENTRYPOINT ["sh","-c","exec java --enable-preview -jar /app/lsmraft.jar \
   \"$PEER_ID\" \"$GROUP_ID\" \"$PEERS\" \"$PORT\" \"$DATA_DIR\""]

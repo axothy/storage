@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    application
 }
 
 group = "ru.axothy"
@@ -8,6 +9,10 @@ version = "1.1.0"
 
 repositories {
     mavenCentral()
+}
+
+application {
+    mainClass.set("ru.axothy.LsmRaftServer")
 }
 
 dependencies {
@@ -47,6 +52,9 @@ tasks.withType<JavaExec>().configureEach {
 }
 
 tasks.shadowJar {
+    archiveBaseName.set("lsmraft")
     archiveClassifier.set("")
+    archiveVersion.set("")
+
     mergeServiceFiles()
 }
