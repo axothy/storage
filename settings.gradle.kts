@@ -1,5 +1,2 @@
 rootProject.name = "storage"
-include("storage-api", "storage-core")
-
-include("replicated-storage-common")
-include("replicated-storage-core")
+include("storage-api", "storage-core", "replicated-storage-common", "replicated-storage-core", "replicated-storage-client")

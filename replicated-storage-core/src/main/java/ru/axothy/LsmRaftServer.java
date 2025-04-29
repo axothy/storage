@@ -2,65 +2,59 @@ package ru.axothy;
 
 import org.apache.ratis.conf.RaftProperties;
 import org.apache.ratis.grpc.GrpcConfigKeys;
-import org.apache.ratis.grpc.GrpcFactory;
 import org.apache.ratis.protocol.RaftGroup;
 import org.apache.ratis.protocol.RaftGroupId;
 import org.apache.ratis.protocol.RaftPeer;
 import org.apache.ratis.protocol.RaftPeerId;
 import org.apache.ratis.server.RaftServer;
-import org.apache.ratis.util.NetUtils;
+import org.apache.ratis.server.RaftServerConfigKeys;
+import org.apache.ratis.statemachine.StateMachine;
 
-import java.net.InetSocketAddress;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public final class LsmRaftServer {
 
     public static void main(String[] args) throws Exception {
-        String id = System.getenv("NODE_ID");
-        String peersEnv = System.getenv("PEERS"); // "n1:localhost:22001,n2:localhost:22002,..."
-        Path dataDir = Path.of("/var/lib/lsm/" + id);
+        RaftPeerId       self   = RaftPeerId.valueOf(args[0]);          // "n1"
+        RaftGroupId      gid    = RaftGroupId.valueOf(UUID.fromString(args[1]));
+        List<RaftPeer>   peers  = parsePeers(args[2]);                  // "n1:localhost:8761,n2:…"
+        RaftProperties   props  = new RaftProperties();
 
-        RaftPeerId serverId = RaftPeerId.valueOf(id);
+        int port = Integer.parseInt(args[3]);                           // 8761
+        GrpcConfigKeys.Server.setPort(props, port);                     // gRPC транспорт :contentReference[oaicite:1]{index=1}
 
-        List<RaftPeer> peers = Stream.of(peersEnv.split(","))
-                .map(s -> {
-                    String[] p = s.split(":");
-                    RaftPeerId peerId = RaftPeerId.valueOf(p[0]);
-                    InetSocketAddress addr = NetUtils.createSocketAddr(p[1],
-                            Integer.parseInt(p[2]));
-                    return RaftPeer.newBuilder()
-                            .setId(peerId)
-                            .setAddress(addr)
-                            .build();
-                })
-                .collect(Collectors.toList());
+        Path dataDir = Paths.get(args[4]);                              // "/data/n1"
+        RaftServerConfigKeys.setStorageDir(props, List.of(dataDir.toFile()));
 
-        RaftGroupId groupId = RaftGroupId.valueOf(UUID.fromString("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"));
-        RaftGroup group = RaftGroup.valueOf(groupId, peers);
+        StateMachine sm = new LsmStateMachine(dataDir.resolve("lsm"));
+        RaftGroup    grp = RaftGroup.valueOf(gid, peers);
 
-        RaftProperties props = new RaftProperties();
-        GrpcConfigKeys.Server.setPort(props, Integer.parseInt(System.getenv("PORT")));
-
-        LsmStateMachine sm = new LsmStateMachine(dataDir);
-        RaftServer server = RaftServer.newBuilder()
-                .setServerId(serverId)
+        RaftServer.newBuilder()
+                .setServerId(self)
+                .setGroup(grp)
                 .setStateMachine(sm)
                 .setProperties(props)
-                .setGroup(group)
-                .setParameters(GrpcFactory.newRaftParameters(null)) //fixme tls null
-                .build();
+                .build()
+                .start();
+    }
 
-        server.start();
+    private static List<RaftPeer> parsePeers(String csv) {
+        return Arrays.stream(csv.split(","))
+                .map(seg -> {                         // "n1:localhost:8761"
+                    String[] p   = seg.split(":");
+                    String  id   = p[0];
+                    String  host = p[1] + ':' + p[2]; // "localhost:8761"
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            try {
-                server.close();
-            } catch (Exception ignored) { }
-        }));
+                    return RaftPeer.newBuilder()      // ← актуальный API Ratis-3.x
+                            .setId(RaftPeerId.valueOf(id))
+                            .setAddress(host)
+                            .build();
+                })
+                .toList();
     }
 }
 

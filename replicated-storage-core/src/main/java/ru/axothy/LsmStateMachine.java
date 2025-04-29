@@ -1,6 +1,7 @@
 package ru.axothy;
 
-import com.google.protobuf.InvalidProtocolBufferException;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.MessageLite;
 import lsmraft.Lsmraft;
 import org.apache.ratis.protocol.Message;
 import org.apache.ratis.statemachine.TransactionContext;
@@ -20,7 +21,7 @@ import java.util.concurrent.CompletableFuture;
 
 public final class LsmStateMachine extends BaseStateMachine {
 
-    private static final long FLUSH_THRESHOLD_BYTES = 4_194_3040L;
+    private static final long FLUSH_THRESHOLD_BYTES = 4_194_3040L; //fixme вынос в конфиг
 
     private final Storage<MemorySegment, Entry<MemorySegment>> delegate;
 
@@ -30,72 +31,83 @@ public final class LsmStateMachine extends BaseStateMachine {
 
     @Override
     public CompletableFuture<Message> applyTransaction(TransactionContext trx) {
-
-        Lsmraft.Command cmd;
         try {
-            cmd = Lsmraft.Command.parseFrom(trx.getLogEntry().getStateMachineLogEntry().getLogData().toByteArray());
-        } catch (InvalidProtocolBufferException e) {
-            throw new IllegalStateException("Cannot decode Command", e);
-        }
+            Lsmraft.Command command = Lsmraft.Command.parseFrom(trx.getLogEntry().getStateMachineLogEntry().getLogData().toByteArray());
 
-        switch (cmd.getPayloadCase()) {
-            case UPSERT -> {
-                Lsmraft.KvEntry kv = cmd.getUpsert().getEntry();
+            switch (command.getPayloadCase()) {
+                case UPSERT -> {
+                    Lsmraft.KvEntry kv = command.getUpsert().getEntry();
 
-                delegate.upsert(
-                        new BaseEntry<>(
-                                ProtoEntryConverters.toSegment(kv.getKey().toByteArray()),
-                                ProtoEntryConverters.toSegment(kv.getValue().toByteArray())
-                        )
-                );
-            } //fixme ???
-            case DEL -> {
-                MemorySegment key = ProtoEntryConverters.toSegment(cmd.getDel().getKey().toByteArray());
-                delegate.upsert(new BaseEntry<>(key, null));
+                    upsert(kv);
+                    return CompletableFuture.completedFuture(Message.EMPTY);
+                }
+                case DEL -> {
+                    delete(command.getDel().getKey());
+                    return CompletableFuture.completedFuture(Message.EMPTY);
+                }
+                default -> throw new IllegalStateException("Unknown command");
             }
-            default -> throw new IllegalStateException("unknown cmd");
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
         }
-
-        return CompletableFuture.completedFuture(Message.valueOf("OK"));
     }
 
     @Override
     public CompletableFuture<Message> query(Message request) {
         try {
             Lsmraft.Query query = Lsmraft.Query.parseFrom(request.getContent().toByteArray());
-            Lsmraft.QueryReply.Builder reply = Lsmraft.QueryReply.newBuilder();
-
-            switch (query.getPayloadCase()) {
-                case GET -> {
-                    MemorySegment key = ProtoEntryConverters.toSegment(query.getGet().getKey());
-                    Entry<MemorySegment> entry = delegate.get(key);
-                    if (entry != null) {
-                        reply.setSingle(ProtoEntryConverters.toProtoEntry(entry));
-                    }
-
-                    return completed(reply);
-                } //fixme ???
-
-                case RANGE -> {
-                    MemorySegment from = ProtoEntryConverters.toSegment(query.getRange().getFrom());
-                    MemorySegment to = ProtoEntryConverters.toSegment(query.getRange().getTo());
-                    Iterator<Entry<MemorySegment>> iterator = delegate.get(from, to);
-
-                    Lsmraft.QueryReply.EntryIteratorChunk.Builder chunk = Lsmraft.QueryReply.EntryIteratorChunk.newBuilder();
-                    for (int i = 0; i < 256 & iterator.hasNext(); i++) {
-                        chunk.addEntries(ProtoEntryConverters.toProtoEntry(iterator.next()));
-                    }
-
-                    chunk.setFinished(!iterator.hasNext());
-                    reply.setChunk(chunk);
-                    return completed(reply);
-                }
-
-                default -> throw new IllegalStateException("unknown query");
-            }
-        } catch (IOException ex) {
-            return failed(ex);
+            return switch (query.getPayloadCase()) {
+                case GET -> CompletableFuture.completedFuture(singleGet(query.getGet()));
+                case RANGE -> CompletableFuture.completedFuture(rangeGet(query.getRange()));
+                default -> CompletableFuture.failedFuture(new IllegalArgumentException("Unknown query"));
+            };
+        } catch (Exception e) {
+            return CompletableFuture.failedFuture(e);
         }
+    }
+
+    private void upsert(Lsmraft.KvEntry proto) {
+        delegate.upsert(
+                new BaseEntry<>(
+                        ProtoEntryConverters.toSegment(proto.getKey().toByteArray()),
+                        ProtoEntryConverters.toSegment(proto.getValue().toByteArray())
+                )
+        );
+    }
+
+    private void delete(ByteString tombstoneKey) {
+        MemorySegment key = ProtoEntryConverters.toSegment(tombstoneKey.toByteArray());
+        delegate.upsert(new BaseEntry<>(key, null));
+    }
+
+    private Message singleGet(Lsmraft.Get get) {
+        MemorySegment key = ProtoEntryConverters.toSegment(get.getKey());
+        Entry<MemorySegment> entry = delegate.get(key);
+
+        Lsmraft.QueryReply.Builder reply = Lsmraft.QueryReply.newBuilder();
+        if (entry != null) {
+            reply.setSingle(ProtoEntryConverters.toProtoEntry(entry));
+        }
+
+        return Message.valueOf(parse(reply.build()));
+    }
+
+    private Message rangeGet(Lsmraft.Range range) {
+        MemorySegment from = ProtoEntryConverters.toSegment(range.getFrom());
+        MemorySegment to = ProtoEntryConverters.toSegment(range.getTo());
+        Iterator<Entry<MemorySegment>> iterator = delegate.get(from, to);
+
+        Lsmraft.QueryReply.EntryIteratorChunk.Builder chunk = Lsmraft.QueryReply.EntryIteratorChunk.newBuilder();
+        for (int i = 0; i < 256 & iterator.hasNext(); i++) {
+            chunk.addEntries(ProtoEntryConverters.toProtoEntry(iterator.next()));
+        }
+
+        chunk.setFinished(!iterator.hasNext());
+
+        Lsmraft.QueryReply.Builder reply = Lsmraft.QueryReply.newBuilder();
+        reply.setChunk(chunk);
+
+        return Message.valueOf(parse(reply.build()));
     }
 
     @Override
@@ -103,16 +115,14 @@ public final class LsmStateMachine extends BaseStateMachine {
         delegate.close();
     }
 
-    private static CompletableFuture<Message> completed(Lsmraft.QueryReply.Builder builder) {
-        return CompletableFuture.completedFuture(
-                Message.valueOf(builder.build().toByteString())
-        );
+    @Override
+    public long takeSnapshot() throws IOException {
+        // TODO implement
+        return 0;
     }
 
-    private static CompletableFuture<Message> failed(Throwable t) {
-        CompletableFuture<Message> cf = new CompletableFuture<>();
-        cf.completeExceptionally(t);
-
-        return cf;
+    private org.apache.ratis.thirdparty.com.google.protobuf.ByteString parse(MessageLite src) {
+        byte[] data = src.toByteArray();
+        return org.apache.ratis.thirdparty.com.google.protobuf.ByteString.copyFrom(data);
     }
 }
