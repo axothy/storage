@@ -1,0 +1,34 @@
+syntax = "proto3";
+package lsmraft;
+
+message KvEntry   { bytes key = 1; bytes value = 2; }
+message Upsert    { KvEntry entry = 1; }
+message Delete    { bytes   key   = 1; }
+
+message Command {
+  oneof payload {
+    Upsert upsert = 1;
+    Delete del    = 2;
+  }
+}
+
+message Get     { bytes key = 1; }
+message Range   { bytes from = 1; bytes to = 2; }
+
+message Query {
+  oneof payload {
+    Get   get   = 1;
+    Range range = 2;
+  }
+}
+
+message QueryReply {
+  oneof payload {
+    KvEntry             single = 1;          // результат get
+    EntryIteratorChunk  chunk  = 2;          // очередная «пачка» range-итератора
+  }
+  message EntryIteratorChunk {
+    repeated KvEntry entries  = 1;
+    bool      finished        = 2;
+  }
+}

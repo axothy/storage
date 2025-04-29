@@ -1,4 +1,4 @@
-package utils;
+package ru.axothy.storage;
 
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;

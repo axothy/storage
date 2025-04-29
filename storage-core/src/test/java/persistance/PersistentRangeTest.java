@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import ru.axothy.api.Entry;
 import ru.axothy.api.Storage;
 import utils.BaseTest;
-import utils.StorageFactory;
+import ru.axothy.storage.StorageFactory;
 
 import java.io.IOException;
 import java.util.Iterator;
