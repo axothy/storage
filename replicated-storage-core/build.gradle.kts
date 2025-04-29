@@ -1,5 +1,6 @@
 plugins {
     id("java")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "ru.axothy"
@@ -23,6 +24,8 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:3.25.7")
     implementation("io.grpc:grpc-netty-shaded:1.72.0")
 
+    runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
+
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
@@ -41,4 +44,9 @@ tasks.withType<Test>().configureEach {
 
 tasks.withType<JavaExec>().configureEach {
     jvmArgs("--enable-preview")
+}
+
+tasks.shadowJar {
+    archiveClassifier.set("")
+    mergeServiceFiles()
 }

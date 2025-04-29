@@ -9,8 +9,9 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/replicated-storage-common" />
+            <option value="$PROJECT_DIR$/replicated-storage-core" />
             <option value="$PROJECT_DIR$/storage-api" />
-            <option value="$PROJECT_DIR$/storage-config" />
             <option value="$PROJECT_DIR$/storage-core" />
           </set>
         </option>

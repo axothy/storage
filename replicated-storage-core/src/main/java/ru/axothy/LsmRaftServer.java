@@ -14,47 +14,60 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public final class LsmRaftServer {
 
     public static void main(String[] args) throws Exception {
-        RaftPeerId       self   = RaftPeerId.valueOf(args[0]);          // "n1"
-        RaftGroupId      gid    = RaftGroupId.valueOf(UUID.fromString(args[1]));
-        List<RaftPeer>   peers  = parsePeers(args[2]);                  // "n1:localhost:8761,n2:…"
-        RaftProperties   props  = new RaftProperties();
+        String selfId = argOrEnv(args, 0, "PEER_ID",  "n1");
+        String gidStr = argOrEnv(args, 1, "GROUP_ID", "9fd7bc90-88f0-4ab6-aedd-5e0d182e027f");
+        String peersCsv = argOrEnv(args, 2, "PEERS", selfId + ":localhost:8761");
+        int port = Integer.parseInt(argOrEnv(args, 3, "PORT", "8761"));
+        String data = argOrEnv(args, 4, "DATA_DIR", "/data");
 
-        int port = Integer.parseInt(args[3]);                           // 8761
-        GrpcConfigKeys.Server.setPort(props, port);                     // gRPC транспорт :contentReference[oaicite:1]{index=1}
+        /* -------- configs -------- */
+        RaftProperties properties = new RaftProperties();
+        GrpcConfigKeys.Server.setPort(properties, port);
+        Path dataDir = Paths.get(data);
+        RaftServerConfigKeys.setStorageDir(properties, List.of(dataDir.toFile()));
 
-        Path dataDir = Paths.get(args[4]);                              // "/data/n1"
-        RaftServerConfigKeys.setStorageDir(props, List.of(dataDir.toFile()));
+        StateMachine stateMachine = new LsmStateMachine(dataDir.resolve("lsm"));
+        RaftGroup raftGroup = RaftGroup.valueOf(RaftGroupId.valueOf(UUID.fromString(gidStr)), parsePeers(peersCsv));
 
-        StateMachine sm = new LsmStateMachine(dataDir.resolve("lsm"));
-        RaftGroup    grp = RaftGroup.valueOf(gid, peers);
+        RaftServer server = RaftServer.newBuilder()
+                .setServerId(RaftPeerId.valueOf(selfId))
+                .setGroup(raftGroup)
+                .setStateMachine(stateMachine)
+                .setProperties(properties)
+                .build();
 
-        RaftServer.newBuilder()
-                .setServerId(self)
-                .setGroup(grp)
-                .setStateMachine(sm)
-                .setProperties(props)
-                .build()
-                .start();
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                server.close();
+            } catch (Exception ignore) {}
+        }));
+
+        server.start();
+    }
+
+    private static String argOrEnv(String[] args, int idx, String env, String dflt) {
+        if (args.length > idx) {
+            return args[idx];
+        }
+
+        return Optional.ofNullable(System.getenv(env)).orElse(dflt);
     }
 
     private static List<RaftPeer> parsePeers(String csv) {
         return Arrays.stream(csv.split(","))
-                .map(seg -> {                         // "n1:localhost:8761"
-                    String[] p   = seg.split(":");
-                    String  id   = p[0];
-                    String  host = p[1] + ':' + p[2]; // "localhost:8761"
-
-                    return RaftPeer.newBuilder()      // ← актуальный API Ratis-3.x
-                            .setId(RaftPeerId.valueOf(id))
-                            .setAddress(host)
+                .map(seg -> {
+                    String[] p = seg.split(":");
+                    return RaftPeer.newBuilder()
+                            .setId(RaftPeerId.valueOf(p[0]))
+                            .setAddress(p[1] + ':' + p[2])
                             .build();
                 })
                 .toList();
     }
 }
-
