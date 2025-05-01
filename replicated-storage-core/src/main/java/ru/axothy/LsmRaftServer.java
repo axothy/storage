@@ -24,7 +24,8 @@ public final class LsmRaftServer {
         String gidStr = argOrEnv(args, 1, "GROUP_ID", "9fd7bc90-88f0-4ab6-aedd-5e0d182e027f");
         String peersCsv = argOrEnv(args, 2, "PEERS", selfId + ":localhost:8761");
         int port = Integer.parseInt(argOrEnv(args, 3, "PORT", "8761"));
-        String data = argOrEnv(args, 4, "DATA_DIR", "/data");
+        int httpPort = Integer.parseInt(argOrEnv(args, 4, "HTTP_PORT", "8081"));
+        String data = argOrEnv(args, 5, "DATA_DIR",  "/data");
 
         /* -------- configs -------- */
         RaftProperties properties = new RaftProperties();
@@ -49,6 +50,7 @@ public final class LsmRaftServer {
         }));
 
         server.start();
+        HttpGateway.start(httpPort, raftGroup, properties);
     }
 
     private static String argOrEnv(String[] args, int idx, String env, String dflt) {
