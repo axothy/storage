@@ -29,6 +29,9 @@ dependencies {
     implementation("com.google.protobuf:protobuf-java:3.25.7")
     implementation("io.grpc:grpc-netty-shaded:1.72.0")
 
+    implementation("io.javalin:javalin-bundle:6.6.0")
+    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
+
     runtimeOnly("org.slf4j:slf4j-simple:2.0.17")
 
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
