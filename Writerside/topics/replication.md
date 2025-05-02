@@ -44,8 +44,47 @@
 
 </code-block>
 
+### Запуск кластера
 
+<code-block lang="bash">
+docker network create lsm-net
 
+# --- n1 ---
+docker run -d --name n1 --network lsm-net \
+-p 8761:8761 -p 8081:8081 \
+-e PEER_ID=n1 -e PORT=8761 -e HTTP_PORT=8081 \
+-e GROUP_ID=3fa85f64-5717-4562-b3fc-2c963f66afa6 \
+-e PEERS="n1:n1:8761,n2:n2:8762,n3:n3:8763" \
+-e FLUSH_THRESHOLD_BYTES=1024 \
+-e BLOOM_FPP=0.02 \
+-e BLOOM_HASH_FUNCS=2 \
+-v lsm_n1:/data \
+axothy/lsmraft:latest
+
+# --- n2 ---
+docker run -d --name n2 --network lsm-net \
+-p 8762:8762 -p 8082:8082 \
+-e PEER_ID=n2 -e PORT=8762 -e HTTP_PORT=8082 \
+-e GROUP_ID=3fa85f64-5717-4562-b3fc-2c963f66afa6 \
+-e PEERS="n1:n1:8761,n2:n2:8762,n3:n3:8763" \
+-e FLUSH_THRESHOLD_BYTES=1024 \
+-e BLOOM_FPP=0.02 \
+-e BLOOM_HASH_FUNCS=2 \
+-v lsm_n2:/data \
+axothy/lsmraft:latest
+
+# --- n3 ---
+docker run -d --name n3 --network lsm-net \
+-p 8763:8763 -p 8083:8083 \
+-e PEER_ID=n3 -e PORT=8763 -e HTTP_PORT=8083 \
+-e GROUP_ID=3fa85f64-5717-4562-b3fc-2c963f66afa6 \
+-e PEERS="n1:n1:8761,n2:n2:8762,n3:n3:8763" \
+-e FLUSH_THRESHOLD_BYTES=1024 \
+-e BLOOM_FPP=0.02 \
+-e BLOOM_HASH_FUNCS=2 \
+-v lsm_n3:/data \
+axothy/lsmraft:latest
+</code-block>
 
 
 ## ЯП и технологии
