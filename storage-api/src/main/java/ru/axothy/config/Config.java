@@ -5,5 +5,6 @@ import java.nio.file.Path;
 public record Config(
         Path basePath,
         long flushThresholdBytes,
-        double bloomFilterFPP) {
+        double bloomFilterFalsePositiveProbability,
+        int bloomFilterHashFunctionsCount) {
 }

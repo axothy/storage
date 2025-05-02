@@ -30,8 +30,6 @@ import static ru.axothy.storage.SSTableUtils.sizeOf;
 
 public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> {
 
-    private static final double BLOOM_FILTER_FPP = 0.03;
-
     private final SSTableManager ssTablesStorage;
 
     private final Config config;
@@ -51,7 +49,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
     public LSMStorage(Config config) {
         this.config = config;
         this.arena = Arena.ofShared();
-        this.ssTablesStorage = new SSTableManager(config.basePath());
+        this.ssTablesStorage = new SSTableManager(config);
         this.state = new AtomicReference<>(StorageState.initial(SSTableManager.loadOrRecover(config.basePath(), arena)));
     }
 
@@ -208,7 +206,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
             return null;
         }
 
-        long newBloomFilterLength = BloomFilter.bloomFilterLength(entryCount, BLOOM_FILTER_FPP);
+        long newBloomFilterLength = BloomFilter.bloomFilterLength(entryCount, config.bloomFilterFalsePositiveProbability());
 
         sizeForCompaction += 2L * Long.BYTES * nonEmptyEntryCount;
         sizeForCompaction += 3L * Long.BYTES + Long.BYTES * nonEmptyEntryCount; //for metadata (header + key offsets)
@@ -238,7 +236,7 @@ public class LSMStorage implements Storage<MemorySegment, Entry<MemorySegment>> 
             Collection<Entry<MemorySegment>> toFlush = writeEntries.values();;
             MemorySegment newPage;
             try {
-                newPage = ssTablesStorage.write(toFlush, BLOOM_FILTER_FPP);
+                newPage = ssTablesStorage.write(toFlush, config.bloomFilterFalsePositiveProbability());
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

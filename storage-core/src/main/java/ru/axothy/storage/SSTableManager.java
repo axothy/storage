@@ -1,6 +1,7 @@
 package ru.axothy.storage;
 
 import ru.axothy.api.Entry;
+import ru.axothy.config.Config;
 import ru.axothy.iterators.MergeIterator;
 import ru.axothy.iterators.PeekingIterator;
 import ru.axothy.iterators.PeekingIteratorImpl;
@@ -43,9 +44,7 @@ public class SSTableManager {
 
     private static final long COMPACTION_NOT_FINISHED_TAG = -1;
 
-    private final Path basePath;
-
-    public static final int HASH_FUNCTIONS_NUM = 2;
+    private final Config config;
 
     private static final SSTableOffsets offsetsConfig = new SSTableOffsets(Long.BYTES, 0, 2L * Long.BYTES);
 
@@ -53,8 +52,8 @@ public class SSTableManager {
 
     public record BinarySearchResult(boolean found, long index) { }
 
-    public SSTableManager(Path basePath) {
-        this.basePath = basePath;
+    public SSTableManager(Config config) {
+        this.config = config;
     }
 
     public static List<MemorySegment> loadOrRecover(Path basePath, Arena arena) {
@@ -176,7 +175,7 @@ public class SSTableManager {
 
         memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterLengthOffset(), bloomFilterLength);
         headerOffset += Long.BYTES;
-        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
+        memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), config.bloomFilterHashFunctionsCount());
         headerOffset += Long.BYTES;
         memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getEntriesSizeOffset(), dataToFlush.size());
         headerOffset += Long.BYTES;
@@ -189,7 +188,7 @@ public class SSTableManager {
 
         long i = 0;
         for (Entry<MemorySegment> entry : dataToFlush) {
-            BloomFilter.addToSstable(entry.key(), memorySegment, HASH_FUNCTIONS_NUM, bloomFilterLength * Long.SIZE);
+            BloomFilter.addToSstable(entry.key(), memorySegment, config.bloomFilterHashFunctionsCount(), bloomFilterLength * Long.SIZE);
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, keyOffset + i * Long.BYTES, offset);
             offset = writeEntry(entry, memorySegment, offset);
             i++;
@@ -226,7 +225,7 @@ public class SSTableManager {
     }
 
     public MemorySegment compact(Iterator<Entry<MemorySegment>> iterator, long sizeForCompaction, long entryCount, long bfLength) throws IOException {
-        Path path = basePath.resolve(SSTABLE_NAME + ".tmp");
+        Path path = config.basePath().resolve(SSTABLE_NAME + ".tmp");
 
         MemorySegment memorySegment;
         try (Arena arenaForCompact = Arena.ofShared()) {
@@ -239,7 +238,7 @@ public class SSTableManager {
 
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterLengthOffset(), bfLength);
             headerOffset += Long.BYTES;
-            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), HASH_FUNCTIONS_NUM);
+            memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getBloomFilterHashFunctionsOffset(), config.bloomFilterHashFunctionsCount());
             headerOffset += Long.BYTES;
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getEntriesSizeOffset(), COMPACTION_NOT_FINISHED_TAG);
             headerOffset += Long.BYTES;
@@ -254,7 +253,7 @@ public class SSTableManager {
             while (iterator.hasNext()) {
                 Entry<MemorySegment> entry = iterator.next();
 
-                BloomFilter.addToSstable(entry.key(), memorySegment, HASH_FUNCTIONS_NUM, bfLength * Long.SIZE);
+                BloomFilter.addToSstable(entry.key(), memorySegment, config.bloomFilterHashFunctionsCount(), bfLength * Long.SIZE);
                 memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, keyOffset + index * Long.BYTES, offset);
                 offset = writeEntry(entry, memorySegment, offset);
                 index++;
@@ -262,7 +261,7 @@ public class SSTableManager {
 
             memorySegment.set(ValueLayout.JAVA_LONG_UNALIGNED, offsetsConfig.getEntriesSizeOffset(), entryCount);
 
-            finishCompact(basePath);
+            finishCompact(config.basePath());
         }
 
         return memorySegment;
@@ -278,7 +277,7 @@ public class SSTableManager {
     }
 
     private MemorySegment writeMappedSegment(long size, Arena arena) throws IOException {
-        Path path = basePath.resolve(SSTABLE_NAME + sstablesCount + SSTABLE_EXTENSION);
+        Path path = config.basePath().resolve(SSTABLE_NAME + sstablesCount + SSTABLE_EXTENSION);
         try (FileChannel channel = FileChannel.open(path,
                 StandardOpenOption.READ,
                 StandardOpenOption.WRITE,
