@@ -9,6 +9,7 @@ import org.apache.ratis.protocol.RaftPeerId;
 import org.apache.ratis.server.RaftServer;
 import org.apache.ratis.server.RaftServerConfigKeys;
 import org.apache.ratis.statemachine.StateMachine;
+import ru.axothy.config.Config;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -27,13 +28,20 @@ public final class LsmRaftServer {
         int httpPort = Integer.parseInt(argOrEnv(args, 4, "HTTP_PORT", "8081"));
         String data = argOrEnv(args, 5, "DATA_DIR",  "/data");
 
+        long flushBytes = Long.parseLong(argOrEnv(args, 6, "FLUSH_THRESHOLD_BYTES", "4194304"));
+        double fpp = Double.parseDouble(argOrEnv(args, 7, "BLOOM_FPP", "0.02"));
+        int hashes = Integer.parseInt(argOrEnv(args, 8, "BLOOM_HASH_FUNCS", "2"));
+
+        Path basePath = Paths.get(data).resolve("lsm");
+        Config config = new Config(basePath, flushBytes, fpp, hashes);
+
         /* -------- configs -------- */
         RaftProperties properties = new RaftProperties();
         GrpcConfigKeys.Server.setPort(properties, port);
         Path dataDir = Paths.get(data);
-        RaftServerConfigKeys.setStorageDir(properties, List.of(dataDir.toFile()));
+        RaftServerConfigKeys.setStorageDir(properties, List.of(Paths.get(data).toFile()));
 
-        StateMachine stateMachine = new LsmStateMachine(dataDir.resolve("lsm"));
+        StateMachine stateMachine = new LsmStateMachine(config);
         RaftGroup raftGroup = RaftGroup.valueOf(RaftGroupId.valueOf(UUID.fromString(gidStr)), parsePeers(peersCsv));
 
         RaftServer server = RaftServer.newBuilder()

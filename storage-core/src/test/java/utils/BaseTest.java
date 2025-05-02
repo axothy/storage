@@ -39,7 +39,7 @@ public class BaseTest {
         Path tmp = Files.createTempDirectory("storage");
         long flushThreshold = 1 << 20; // 1 MB
 
-        return new MemorySegmentStorageFactory().createStringStorage(new Config(tmp, flushThreshold, 0.2));
+        return new MemorySegmentStorageFactory().createStringStorage(new Config(tmp, flushThreshold, 0.2, 2));
     }
 
     public void assertEmpty(Iterator<?> iterator) {

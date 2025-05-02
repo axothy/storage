@@ -21,12 +21,10 @@ import java.util.concurrent.CompletableFuture;
 
 public final class LsmStateMachine extends BaseStateMachine {
 
-    private static final long FLUSH_THRESHOLD_BYTES = 4_194_3040L; //fixme вынос в конфиг
-
     private final Storage<MemorySegment, Entry<MemorySegment>> delegate;
 
-    public LsmStateMachine(Path baseDir) {
-        this.delegate = new LSMStorage(new Config(baseDir, FLUSH_THRESHOLD_BYTES, 0.2));
+    public LsmStateMachine(Config config) {
+        this.delegate = new LSMStorage(config);
     }
 
     @Override
