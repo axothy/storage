@@ -11,6 +11,7 @@ import org.apache.ratis.server.RaftServerConfigKeys;
 import org.apache.ratis.statemachine.StateMachine;
 import ru.axothy.config.Config;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -38,7 +39,7 @@ public final class LsmRaftServer {
         /* -------- configs -------- */
         RaftProperties properties = new RaftProperties();
         GrpcConfigKeys.Server.setPort(properties, port);
-        Path dataDir = Paths.get(data);
+        Files.createDirectories(basePath);
         RaftServerConfigKeys.setStorageDir(properties, List.of(Paths.get(data).toFile()));
 
         StateMachine stateMachine = new LsmStateMachine(config);
