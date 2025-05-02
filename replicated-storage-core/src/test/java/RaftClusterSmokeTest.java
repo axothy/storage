@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import ru.axothy.LsmStateMachine;
+import ru.axothy.config.Config;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -55,7 +56,7 @@ public class RaftClusterSmokeTest {
             RaftServer srv = RaftServer.newBuilder()
                     .setServerId(peer.getId())
                     .setGroup(RaftGroup.valueOf(GID, peers))
-                    .setStateMachine(new LsmStateMachine(dir))
+                    .setStateMachine(new LsmStateMachine(new Config(dir, 4000000, 0.02, 2)))
                     .setProperties(props)
                     .build();
             servers.add(srv);

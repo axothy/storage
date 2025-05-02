@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/replicated-storage-core" />
             <option value="$PROJECT_DIR$/storage-api" />
             <option value="$PROJECT_DIR$/storage-core" />
+            <option value="$PROJECT_DIR$/storage-ui" />
           </set>
         </option>
       </GradleProjectSettings>
