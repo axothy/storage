@@ -6,5 +6,10 @@ export default defineConfig({
   build: {
     outDir: 'dist',                // читается в build.gradle.kts
     emptyOutDir: true
-  }
+  },
+  server: {
+    proxy: {
+      '/api': 'http://localhost:8081',   // ваш Javalin
+    },
+  },
 });
