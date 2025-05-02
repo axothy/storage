@@ -8,24 +8,14 @@ node {
     npmWorkDir.set(file("${projectDir}"))
 }
 
-tasks.register<Exec>("npmInstall") {
-    group = "build"
-    workingDir = projectDir
-    commandLine("npm", "install")
+val npmBuild = tasks.register<com.github.gradle.node.npm.task.NpmTask>("npmBuild") {
+    dependsOn(tasks.named("npmInstall"))
+    args.set(listOf("run", "build"))
+    workingDir.set(projectDir)
 }
 
-tasks.register<Exec>("npmBuild") {
-    group = "build"
-    dependsOn("npmInstall")
-    workingDir = projectDir
-    commandLine("npm", "run", "build")
-}
-
-tasks.named("assemble").configure { dependsOn(":storage-ui:npmBuild") }
-
-val copyToRatis = tasks.register<Copy>("copyFrontend") {
-    dependsOn("npmBuild")
+val copyFrontend = tasks.register<Copy>("copyFrontend") {
+    dependsOn(npmBuild)
     from("$projectDir/dist")
-    into("$rootDir/storage-ratis/src/main/resources/static")
+    into("$rootDir/replicated-storage-core/src/main/resources/static")
 }
-tasks.named("npmBuild").configure { finalizedBy(copyToRatis) }

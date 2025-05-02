@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import ru.axothy.LsmStateMachine;
+import ru.axothy.config.Config;
 
 import java.nio.file.Files;
 import java.util.List;
@@ -33,7 +34,7 @@ public class OneNodeSimpleClusterTest {
         server = RaftServer.newBuilder()
                 .setServerId(peer.getId())
                 .setGroup(RaftGroup.valueOf(GID, List.of(peer)))
-                .setStateMachine(new LsmStateMachine(Files.createTempDirectory("lsmraft-single")))
+                .setStateMachine(new LsmStateMachine(new Config(Files.createTempDirectory("lsmraft-single"), 4000000, 0.02, 2)))
                 .setProperties(p)
                 .build();
         server.start();
